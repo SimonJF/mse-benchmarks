@@ -10,15 +10,17 @@ handle_call(_, _, State) -> {stop, unexpected_call, State}.
 
 handle_cast({start_test, ServerPID, NumPings, HarnessPID}, _)
   when is_integer(NumPings) andalso NumPings >= 0 ->
-  StartTime = os:system_time(),
+  StartTime = erlang:monotonic_time(),
   %io:format("Sending first ping~n"),
   vanilla_server:ping(ServerPID),
   {noreply, {ServerPID, NumPings - 1, HarnessPID, StartTime}};
 
 handle_cast(pong, St={_, 0, HarnessPID, StartTime}) ->
-  io:format("Done! Sending back.~n"),
-  EndTime = os:system_time(),
-  HarnessPID ! {done, StartTime, EndTime},
+  %io:format("Done! Sending back.~n"),
+  EndTime = erlang:monotonic_time(),
+  DiffNative = EndTime - StartTime,
+  Diff = erlang:convert_time_unit(DiffNative, native, milli_seconds),
+  HarnessPID ! {done, Diff},
   {noreply, St};
 handle_cast(pong, {ServerPID, NumPings, HarnessPID, StartTime}) ->
   %io:format("Sending ping~n"),

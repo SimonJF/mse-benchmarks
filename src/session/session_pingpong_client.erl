@@ -34,6 +34,7 @@ ssactor_conversation_ended(CID, Reason, State) ->
 ssactor_handle_message(_, _, _, _, "pong", [], State, ConvKey) ->
   PingNum = State#client_state.pings_remaining,
   if PingNum > 0 ->
+       fprof:trace(start, "fprof_trace.txt"),
        session_pingpong_server:ping(ConvKey),
        NewState = State#client_state{pings_remaining=PingNum-1},
        {ok, NewState};

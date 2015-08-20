@@ -2,16 +2,33 @@ library(ggplot2)
 
 plotFromFile <- function(filename) {
   csvData <- read.csv(filename)
-  plotGraph(csvData)
+  csvDataFiltered <- csvData[csvData[, "pings"] %% 200 == 0, ]
+  plotGraph(csvDataFiltered)
+  # log2 scaling of the y axis (with visually-equal spacing)
+  
+  #library(scales)     # Need the scales package
+  #sp + scale_y_continuous(trans=log10_trans())
+  
+  # log2 coordinate transformation (with visually-diminishing spacing)
+  #<- sp + coord_trans(y="log10")
 }
 
 plotGraph <- function(csvData) {
-  summarisedData <- summarySE(csvData, measurevar="time", groupvars=c("cond", "pings"))
-  ggplot(summarisedData, aes(x=pings, y=time)) + 
-    geom_errorbar(aes(ymin=time-ci, ymax=time+ci), width=.1) +
+  summarisedData <- summarySE(csvData, measurevar="time", groupvars=c("type", "pings"))
+  print(paste0("Current working dir: ", summarisedData["time", ]))
+  ggplot(summarisedData, aes(x=pings, y=time, colour=type)) + 
+    geom_errorbar(aes(ymin=time-se, ymax=time+se), width=.1) +
     geom_line() +
-    geom_point()
-  
+    geom_point() +
+    xlab("Number of Pings") +
+    ylab("Time taken / ms") +
+    scale_colour_hue(name="Condition",    # Legend label, use darker colors
+                     breaks=c("session_erlang", "session_erlang_noerr", "session_erlang_nomonitor", "vanilla_erlang"),
+                     labels=c("Monitored Session Erlang (MSE)",
+                              "MSE: No synchronous error reporting", "MSE: No monitoring", "Erlang gen_server2"),
+                     l=40) + # Use darker colors, lightness=40
+    ggtitle("Results of PingPong Benchmark for Monitored Session Erlang")
+    
 }
 
 ## Gives count, mean, standard deviation, standard error of the mean, and confidence interval (default 95%).

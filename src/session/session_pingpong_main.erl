@@ -28,7 +28,7 @@ test_loop(_, _, _, _, _, _, _) ->
 
 start() ->
   application:start(monitored_session_erlang),
-  error_logger:tty(false),
+  %error_logger:tty(false),
   conversation:initialise("scribble_specs", session_pingpong_conf:config()).
 
 stop(_) -> ok.
